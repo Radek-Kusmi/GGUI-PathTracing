@@ -1,0 +1,21 @@
+# Pliki tymczasowe i ukryte foldery Visual Studio
+.vs/
+*.user
+*.db
+*.VC.db
+
+# Foldery kompilacji (binaria i pliki tymczasowe)
+x64/
+x86/
+Debug/
+Release/
+ProjektGGUI/x64/
+ProjektGGUI/Debug/
+ProjektGGUI/Release/
+
+# Pliki binarne i logi
+*.obj
+*.exe
+*.pdb
+*.ilk
+*.tlog
