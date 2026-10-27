@@ -63,6 +63,9 @@
     <ClInclude Include="src\Renderer\PathTracer.h">
       <Filter>Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="src\Utils\ShaderLoader.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Core\Ray.cpp">
@@ -96,5 +99,7 @@
   <ItemGroup>
     <None Include="vcpkg.json" />
     <None Include="packages.config" />
+    <None Include="assets\shaders\default.frag" />
+    <None Include="assets\shaders\default.vert" />
   </ItemGroup>
 </Project>

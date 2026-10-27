@@ -158,6 +158,7 @@
     <ClInclude Include="src\Scene\Mesh.h" />
     <ClInclude Include="src\Scene\Scene.h" />
     <ClInclude Include="src\Utils\Image.h" />
+    <ClInclude Include="src\Utils\ShaderLoader.h" />
     <ClInclude Include="src\Utils\Timer.h" />
   </ItemGroup>
   <ItemGroup>
@@ -172,6 +173,8 @@
     <ClCompile Include="src\Utils\Image.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="assets\shaders\default.frag" />
+    <None Include="assets\shaders\default.vert" />
     <None Include="packages.config" />
     <None Include="vcpkg.json" />
   </ItemGroup>
