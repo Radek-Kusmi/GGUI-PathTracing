@@ -2,7 +2,7 @@
 #define GLEW_STATIC
 #include <iostream>
 #include <vector>
-#include <cmath> // Wymagane dla funkcji sin() i cos()
+#include <cmath>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
