@@ -18,7 +18,7 @@ public:
 
     bool addMesh(const std::string& filepath) {
         Mesh mesh;
-        if (mesh.loadFromFile(filepath)) {
+        if (mesh.loadFromOBJ(filepath)) {
             meshes.push_back(mesh);
             return true;
         }
