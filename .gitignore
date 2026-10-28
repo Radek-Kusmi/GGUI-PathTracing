@@ -19,3 +19,6 @@ ProjektGGUI/Release/
 *.pdb
 *.ilk
 *.tlog
+
+vcpkg_installed/
+packages/
