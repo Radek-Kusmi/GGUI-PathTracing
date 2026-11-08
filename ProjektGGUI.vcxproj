@@ -154,11 +154,13 @@
     <ClInclude Include="src\Renderer\BvhWrapper.h" />
     <ClInclude Include="src\Renderer\PathTracer.h" />
     <ClInclude Include="src\Scene\Camera.h" />
+    <ClInclude Include="src\Scene\IcePlane.h" />
     <ClInclude Include="src\Scene\Material.h" />
     <ClInclude Include="src\Scene\Mesh.h" />
     <ClInclude Include="src\Scene\Scene.h" />
     <ClInclude Include="src\Utils\Image.h" />
     <ClInclude Include="src\Utils\ShaderLoader.h" />
+    <ClInclude Include="src\Utils\TextureLoader.h" />
     <ClInclude Include="src\Utils\Timer.h" />
   </ItemGroup>
   <ItemGroup>
@@ -171,6 +173,7 @@
     <ClCompile Include="src\Scene\Mesh.cpp" />
     <ClCompile Include="src\Scene\Scene.cpp" />
     <ClCompile Include="src\Utils\Image.cpp" />
+    <ClCompile Include="src\Utils\TextureLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="assets\shaders\default.frag" />

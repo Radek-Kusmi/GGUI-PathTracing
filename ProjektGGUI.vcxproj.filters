@@ -66,6 +66,12 @@
     <ClInclude Include="src\Utils\ShaderLoader.h">
       <Filter>Utils</Filter>
     </ClInclude>
+    <ClInclude Include="src\Scene\IcePlane.h">
+      <Filter>Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Utils\TextureLoader.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Core\Ray.cpp">
@@ -94,6 +100,9 @@
     </ClCompile>
     <ClCompile Include="src\main.cpp">
       <Filter>Pliki źródłowe</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Utils\TextureLoader.cpp">
+      <Filter>Utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
