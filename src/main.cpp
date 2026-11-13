@@ -14,10 +14,11 @@
 #include "Scene/IcePlane.h"
 #include "Utils/ShaderLoader.h"
 #include "Utils/TextureLoader.h"
+#include "Renderer/PathTracer.h"
 
 int main() {
     if (!glfwInit()) {
-        std::cerr << "Błąd inicjalizacji GLFW!" << std::endl;
+        std::cerr << "Blad inicjalizacji GLFW!" << std::endl;
         return -1;
     }
 
@@ -27,7 +28,7 @@ int main() {
 
     GLFWwindow* window = glfwCreateWindow(2880, 1620, "Scena 3D - Latarnia i Lód", NULL, NULL);
     if (!window) {
-        std::cerr << "Błąd tworzenia okna GLFW!" << std::endl;
+        std::cerr << "Blad tworzenia okna GLFW!" << std::endl;
         glfwTerminate();
         return -1;
     }
@@ -35,7 +36,7 @@ int main() {
 
     glewExperimental = GL_TRUE;
     if (glewInit() != GLEW_OK) {
-        std::cerr << "Błąd inicjalizacji GLEW!" << std::endl;
+        std::cerr << "Blad inicjalizacji GLEW!" << std::endl;
         return -1;
     }
 
@@ -44,7 +45,7 @@ int main() {
 
     // Dodanie Latarni z pliku OBJ
     if (!scene.addMesh("assets/models/Lighthouse1/lightHouse.obj")) {
-        std::cerr << "Nie udało się wczytać modelu latarni." << std::endl;
+        std::cerr << "Nie udalo sie wczytac modelu latarni." << std::endl;
         return -1;
     }
 
@@ -99,8 +100,16 @@ int main() {
     float orbitSpeed = 0.015f;
     float scaleSpeed = 0.01f;
 
-    // Wczytujemy teksturę lodu z assets/materials/ice.jpg
+    // Wczytujemy teksturę lodu dla OpenGL (VRAM) oraz dla Path Tracera (RAM)
     unsigned int iceTexture = loadTexture("assets/materials/iceee.jpg");
+    CpuTexture cpuIceTexture = loadCpuTexture("assets/materials/iceee.jpg");
+
+    // Rozdzielczość robocza CPU
+    PathTracer pathTracer(1280, 720);
+
+    bool usePathTracer = false;
+    bool spacePressedLastFrame = false;
+    bool needsRender = true;
 
     while (!glfwWindowShouldClose(window)) {
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -121,45 +130,73 @@ int main() {
             if (modelScale < minModelScale) modelScale = minModelScale;
         }
 
+        // Przełączanie trybu klawiszem SPACE
+        bool spacePressed = (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS);
+        if (spacePressed && !spacePressedLastFrame) {
+            usePathTracer = !usePathTracer;
+            if (usePathTracer) {
+                needsRender = true; // Przelicz klatkę po przełączeniu
+            }
+        }
+        spacePressedLastFrame = spacePressed;
+
         glClearColor(0.1f, 0.12f, 0.18f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glUseProgram(shaderProgram);
-
+        // Wspólne parametry kamery i macierze modeli dla OpenGL oraz Path Tracera
         float camX = sin(cameraAngle) * cameraDistance;
         float camZ = cos(cameraAngle) * cameraDistance;
-
-        glm::mat4 projection = glm::perspective(glm::radians(45.0f), 2880.0f / 1620.0f, 0.1f, 1000.0f);
-        glm::mat4 view = glm::lookAt(glm::vec3(camX, 6.0f, camZ), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-
-        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
-
-        // Pozycja i kolor światła ze struktury Scene
-        glUniform3fv(glGetUniformLocation(shaderProgram, "lightPos"), 1, glm::value_ptr(scene.lights[0].position));
-        glUniform3fv(glGetUniformLocation(shaderProgram, "lightColor"), 1, glm::value_ptr(scene.lights[0].color));
-
-        // --- Rysowanie Latarni (bez tekstury z pliku, używa kolorów z MTL/Wierzchołków) ---
-        glUniform1i(glGetUniformLocation(shaderProgram, "useTexture"), GL_FALSE);
+        glm::vec3 cameraPos = glm::vec3(camX, 6.0f, camZ);
+        glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
 
         glm::mat4 modelLantern = glm::mat4(1.0f);
         modelLantern = glm::translate(modelLantern, glm::vec3(0.0f, -2.0f, 0.0f));
         modelLantern = glm::scale(modelLantern, glm::vec3(modelScale));
-        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(modelLantern));
-
-        scene.meshes[0].draw();
-
-        // --- Rysowanie Płaszczyzny Lodu (z teksturą ice.jpg) ---
-        glUniform1i(glGetUniformLocation(shaderProgram, "useTexture"), GL_TRUE);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, iceTexture);
-        glUniform1i(glGetUniformLocation(shaderProgram, "texture_diffuse"), 0);
 
         glm::mat4 modelIce = glm::mat4(1.0f);
         modelIce = glm::translate(modelIce, glm::vec3(0.0f, -2.2f, 0.0f));
-        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(modelIce));
 
-        scene.meshes[1].draw();
+        if (!usePathTracer) {
+            // --- TRYB 0: PODGLĄD OPENGL ---
+            glUseProgram(shaderProgram);
+
+            glm::mat4 projection = glm::perspective(glm::radians(45.0f), 2880.0f / 1620.0f, 0.1f, 1000.0f);
+            glm::mat4 view = glm::lookAt(cameraPos, cameraTarget, glm::vec3(0.0f, 1.0f, 0.0f));
+
+            glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+            glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
+
+            glUniform3fv(glGetUniformLocation(shaderProgram, "lightPos"), 1, glm::value_ptr(scene.lights[0].position));
+            glUniform3fv(glGetUniformLocation(shaderProgram, "lightColor"), 1, glm::value_ptr(scene.lights[0].color));
+
+            // Rysowanie Latarni
+            glUniform1i(glGetUniformLocation(shaderProgram, "useTexture"), GL_FALSE);
+            glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(modelLantern));
+            scene.meshes[0].draw();
+
+            // Rysowanie Płaszczyzny Lodu
+            glUniform1i(glGetUniformLocation(shaderProgram, "useTexture"), GL_TRUE);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, iceTexture);
+            glUniform1i(glGetUniformLocation(shaderProgram, "texture_diffuse"), 0);
+            glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(modelIce));
+            scene.meshes[1].draw();
+        }
+        else {
+            // --- TRYB 1: CPU RAY CASTER / PATH TRACER ---
+            if (needsRender) {
+                pathTracer.renderPass(
+                    cameraPos,
+                    cameraTarget,
+                    45.0f,
+                    scene.meshes[0], modelLantern,
+                    scene.meshes[1], modelIce,
+                    cpuIceTexture
+                );
+                needsRender = false;
+            }
+            pathTracer.display();
+        }
 
         glfwSwapBuffers(window);
         glfwPollEvents();

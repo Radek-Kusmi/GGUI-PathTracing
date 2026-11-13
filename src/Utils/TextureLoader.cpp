@@ -35,12 +35,27 @@ unsigned int loadTexture(const std::string& filepath) {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
         stbi_image_free(data);
-        std::cout << "Pomyślnie wczytano teksturę (" << width << "x" << height << ", kanały: " << nrComponents << "): " << filepath << std::endl;
+        std::cout << "Pomyslnie wczytano teksture (" << width << "x" << height << ", kanaly: " << nrComponents << "): " << filepath << std::endl;
     }
     else {
-        std::cerr << "BŁĄD: Nie można otworzyć pliku tekstury: " << filepath << std::endl;
+        std::cerr << "BLAD: Nie można otworzyc pliku tekstury: " << filepath << std::endl;
         stbi_image_free(data);
     }
 
     return textureID;
+}
+
+CpuTexture loadCpuTexture(const std::string& filepath) {
+    CpuTexture tex;
+    stbi_set_flip_vertically_on_load(true);
+    unsigned char* raw = stbi_load(filepath.c_str(), &tex.width, &tex.height, &tex.channels, 0);
+    if (raw) {
+        size_t totalBytes = static_cast<size_t>(tex.width) * tex.height * tex.channels;
+        tex.data.assign(raw, raw + totalBytes);
+        stbi_image_free(raw);
+    }
+    else {
+        std::cerr << "BLAD (CPU Texture): Nie mozna wczytac " << filepath << std::endl;
+    }
+    return tex;
 }
