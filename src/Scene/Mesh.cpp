@@ -167,6 +167,18 @@ bool Mesh::loadFromOBJ(const std::string& filepath) {
 void Mesh::setupMesh() {
     if (vertices.empty()) return;
 
+    // 1. Wyznaczenie lokalnych granic AABB raz przy budowaniu siatki (oszczędność milionów operacji w Path Tracerze)
+    aabbMin = vertices[0].position;
+    aabbMax = vertices[0].position;
+    for (size_t i = 1; i < vertices.size(); ++i) {
+        aabbMin = glm::min(aabbMin, vertices[i].position);
+        aabbMax = glm::max(aabbMax, vertices[i].position);
+    }
+    // Minimalny margines bezpieczeństwa (ważny dla niemal płaskich obiektów jak tafla lodu)
+    aabbMin -= glm::vec3(0.01f);
+    aabbMax += glm::vec3(0.01f);
+
+    // 2. Konfiguracja buforów OpenGL
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
@@ -191,7 +203,7 @@ void Mesh::setupMesh() {
     glEnableVertexAttribArray(2);
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
 
-    // Attribute 3: Color (NOWOŚĆ)
+    // Attribute 3: Color
     glEnableVertexAttribArray(3);
     glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, color));
 

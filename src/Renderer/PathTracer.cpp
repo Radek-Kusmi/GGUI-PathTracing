@@ -4,6 +4,7 @@
 #include <iostream>
 #include <chrono>
 #include <atomic>
+#include <algorithm>
 #include <omp.h>
 #include <GLFW/glfw3.h>
 
@@ -23,25 +24,27 @@ PathTracer::~PathTracer() {
 glm::vec3 PathTracer::traceRay(
     const Ray& ray,
     const Mesh& lighthouseMesh,
-    const glm::mat4& lighthouseModel,
+    const glm::mat4& invLighthouseModel,
+    const glm::mat3& lighthouseNormalMat,
     const Mesh& iceMesh,
-    const glm::mat4& iceModel,
+    const glm::mat4& invIceModel,
+    const glm::mat3& iceNormalMat,
     const CpuTexture& iceTexture
 ) {
     RayHit closestHit;
     bool hitAnything = false;
     float maxDist = 1000.0f;
 
-    // 1. Sprawdzamy kolizję z latarnią
+    // 1. Sprawdzamy kolizję z latarnią (używając gotowych invModel i normalMat)
     RayHit tempHit;
-    if (intersectMesh(ray, lighthouseMesh, lighthouseModel, 0.001f, maxDist, tempHit, false)) {
+    if (intersectMesh(ray, lighthouseMesh, invLighthouseModel, lighthouseNormalMat, 0.001f, maxDist, tempHit, false)) {
         hitAnything = true;
         maxDist = tempHit.t;
         closestHit = tempHit;
     }
 
     // 2. Sprawdzamy kolizję z taflą lodu (szukamy obiektu bliżej kamery niż obecny maxDist)
-    if (intersectMesh(ray, iceMesh, iceModel, 0.001f, maxDist, tempHit, true)) {
+    if (intersectMesh(ray, iceMesh, invIceModel, iceNormalMat, 0.001f, maxDist, tempHit, true)) {
         hitAnything = true;
         maxDist = tempHit.t;
         closestHit = tempHit;
@@ -82,8 +85,15 @@ void PathTracer::renderPass(
     glm::vec3 horizontal = 2.0f * halfWidth * u;
     glm::vec3 vertical = 2.0f * halfHeight * v;
 
+    // Prekalkulacja odwrotności macierzy modeli i macierzy normalnych RAZ na całą klatkę
+    glm::mat4 invLighthouseModel = glm::inverse(lighthouseModel);
+    glm::mat3 lighthouseNormalMat = glm::transpose(glm::mat3(invLighthouseModel));
+
+    glm::mat4 invIceModel = glm::inverse(iceModel);
+    glm::mat3 iceNormalMat = glm::transpose(glm::mat3(invIceModel));
+
     int numThreads = omp_get_max_threads();
-	std::system("cls"); 
+    std::system("cls");
     std::cout << "\n[PathTracer] Renderowanie (" << width << "x" << height << ") na " << numThreads << " watkach CPU..." << std::endl;
     auto startTime = std::chrono::high_resolution_clock::now();
 
@@ -99,7 +109,12 @@ void PathTracer::renderPass(
             glm::vec3 dir = lowerLeftCorner + s * horizontal + t * vertical - camPos;
             Ray ray(camPos, dir);
 
-            glm::vec3 color = traceRay(ray, lighthouseMesh, lighthouseModel, iceMesh, iceModel, iceTexture);
+            glm::vec3 color = traceRay(
+                ray,
+                lighthouseMesh, invLighthouseModel, lighthouseNormalMat,
+                iceMesh, invIceModel, iceNormalMat,
+                iceTexture
+            );
 
             int idx = (y * width + x) * 4;
             pixelBuffer[idx + 0] = static_cast<unsigned char>(std::clamp(color.r, 0.0f, 1.0f) * 255.0f);

@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <unordered_map>
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 
@@ -17,6 +18,10 @@ class Mesh {
 public:
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
+
+    // Pre-kalkulowane lokalne pudełko otaczające AABB dla szybkich testów Ray Tracingu
+    glm::vec3 aabbMin = glm::vec3(0.0f);
+    glm::vec3 aabbMax = glm::vec3(0.0f);
 
     Mesh();
     ~Mesh();

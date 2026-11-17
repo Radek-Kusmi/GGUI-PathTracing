@@ -1,5 +1,7 @@
 #define _CRT_SECURE_NO_WARNINGS
+#ifndef GLEW_STATIC
 #define GLEW_STATIC
+#endif
 
 #include <iostream>
 #include <vector>

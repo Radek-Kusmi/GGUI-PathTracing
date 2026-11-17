@@ -41,9 +41,11 @@ private:
     glm::vec3 traceRay(
         const Ray& ray,
         const Mesh& lighthouseMesh,
-        const glm::mat4& lighthouseModel,
+        const glm::mat4& invLighthouseModel,
+        const glm::mat3& lighthouseNormalMat,
         const Mesh& iceMesh,
-        const glm::mat4& iceModel,
+        const glm::mat4& invIceModel,
+        const glm::mat3& iceNormalMat,
         const CpuTexture& iceTexture
     );
 
