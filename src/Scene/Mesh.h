@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <GL/glew.h>
 #include <glm/glm.hpp>
+#include "../Renderer/BvhWrapper.h"
 
 struct Vertex {
     glm::vec3 position;
@@ -18,6 +19,7 @@ class Mesh {
 public:
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
+    BvhWrapper bvh;
 
     // Pre-kalkulowane lokalne pudełko otaczające AABB dla szybkich testów Ray Tracingu
     glm::vec3 aabbMin = glm::vec3(0.0f);

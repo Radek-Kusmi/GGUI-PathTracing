@@ -107,7 +107,7 @@ int main() {
     CpuTexture cpuIceTexture = loadCpuTexture("assets/materials/iceee.jpg");
 
     // Rozdzielczość robocza CPU
-    PathTracer pathTracer(1280, 720);
+    PathTracer pathTracer(2880, 1620);
 
     bool usePathTracer = false;
     bool spacePressedLastFrame = false;

@@ -133,18 +133,42 @@ inline bool intersectMesh(
     float bestU = 0.0f, bestV = 0.0f;
     size_t bestIndex = 0;
 
-    for (size_t i = 0; i + 2 < mesh.indices.size(); i += 3) {
-        const Vertex& v0 = mesh.vertices[mesh.indices[i]];
-        const Vertex& v1 = mesh.vertices[mesh.indices[i + 1]];
-        const Vertex& v2 = mesh.vertices[mesh.indices[i + 2]];
+    if (mesh.bvh.isBuilt()) {
+        uint32_t stack[64];
+        int stackPtr = 0;
+        stack[stackPtr++] = 0;
 
-        float t, u, v;
-        if (intersectTriangleLocal(localRay, v0, v1, v2, tMin, currentClosest, t, u, v)) {
-            hitAnything = true;
-            currentClosest = t;
-            bestU = u;
-            bestV = v;
-            bestIndex = i;
+        while (stackPtr > 0) {
+            uint32_t nodeIdx = stack[--stackPtr];
+            const BVHNode& node = mesh.bvh.nodes[nodeIdx];
+
+            if (!BvhWrapper::intersectAABB(localRay, node.aabbMin, node.aabbMax, tMin, currentClosest)) {
+                continue;
+            }
+
+            if (node.isLeaf()) {
+                for (uint32_t i = 0; i < node.triCount; ++i) {
+                    uint32_t triIdx = mesh.bvh.triIndices[node.leftFirst + i];
+                    size_t baseIdx = static_cast<size_t>(triIdx) * 3;
+
+                    const Vertex& v0 = mesh.vertices[mesh.indices[baseIdx]];
+                    const Vertex& v1 = mesh.vertices[mesh.indices[baseIdx + 1]];
+                    const Vertex& v2 = mesh.vertices[mesh.indices[baseIdx + 2]];
+
+                    float t, u, v;
+                    if (intersectTriangleLocal(localRay, v0, v1, v2, tMin, currentClosest, t, u, v)) {
+                        hitAnything = true;
+                        currentClosest = t;
+                        bestU = u;
+                        bestV = v;
+                        bestIndex = baseIdx;
+                    }
+                }
+            }
+            else {
+                stack[stackPtr++] = node.leftFirst + 1;
+                stack[stackPtr++] = node.leftFirst;
+            }
         }
     }
 

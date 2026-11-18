@@ -178,6 +178,8 @@ void Mesh::setupMesh() {
     aabbMin -= glm::vec3(0.01f);
     aabbMax += glm::vec3(0.01f);
 
+    bvh.build(vertices, indices);
+
     // 2. Konfiguracja buforów OpenGL
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
